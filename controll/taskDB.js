@@ -131,6 +131,37 @@ const SubmitTaskFile = async(req, res)=>{
     }
     
 }
-module.exports = { sendTaskFile, SubmitTaskFile };
+// search the tasks
+const searchTaskById = async(req, res)=> {
+try {
+  const task_id = req.query.task_id;
+  const taskData = await taskDB.doc(task_id).get();
+  if(taskData.exists){
+    res.status(200).json(taskData.data());
+  }
+  else{
+    res.status(400).json('Sorry This Task does not exist in Data-Base');
+  }
+} catch (error) {
+  console.log(error);
+}
+}
+
+// show all task at a time 
+const ReadallTask = async(req, res)=> {
+try {
+  taskDB.get()
+  .then((QuerySnapshot) => {
+    let UserDataArr = [];
+    QuerySnapshot.forEach((doc) => {
+      UserDataArr.push(doc.data());
+    });
+    res.status(200).json(UserDataArr);
+  });
+} catch (error) {
+  console.log(error)
+}
+}
+module.exports = { sendTaskFile, SubmitTaskFile, searchTaskById, ReadallTask };
 
 

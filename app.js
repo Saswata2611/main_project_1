@@ -12,10 +12,14 @@ const ReadDataall = require('./routes/route');
 const DeleteData = require('./routes/route');
 const UpdateData  = require('./routes/route');
 const ReadDataByrole = require('./routes/route');
+//from taskDB
+const searchTaskById = require('./routes/route');
 const sendTaskFile = require('./routes/route');
 const SubmitTaskFile = require('./routes/route');
-//from taskDB
-
+const ReadallTask = require('./routes/route');
+// from batchDB
+const createBatch = require('./routes/route');
+const addUsersToBatch = require('./routes/route');
 // Initilizing the PORT & dependencies
 const app = express();
 const PORT = process.env.PORT || 1013;
@@ -38,7 +42,12 @@ if(err) throw err;
 });
 app.post('/upload/submit', upload.single('filename'), SubmitTaskFile , (err, result)=>{
     if(err) throw err;
-    });
+});
+app.get('/searchtask', searchTaskById);
+app.get('/all-task', ReadallTask);
+app.post('/createbatch', createBatch);
+app.post('/addusertobatch', addUsersToBatch);
+
 // starting the server
 const start = async()=> {
     try {

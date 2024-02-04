@@ -8,4 +8,4 @@ admin.initializeApp({
 
 const db = admin.firestore();
 const storage = admin.storage().bucket('first-login-register.appspot.com');
-module.exports = { db , storage,};
+module.exports = { db , storage, admin};

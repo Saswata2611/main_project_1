@@ -67,7 +67,7 @@ try {
 }
 }
 
-// search all at a time
+// show  all users at a time
 const ReadDataall = async(req, res)=> {
   mainDB.get()
   .then((QuerySnapshot) => {
