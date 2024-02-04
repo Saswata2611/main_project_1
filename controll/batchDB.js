@@ -12,7 +12,7 @@ const createBatch = async(req, res)=> {
         batchMonth:req.query.month,
         batchCourse:req.query.course,
         batchUsers:null,
-        userRole:null,
+        batch_faculty:null,
         startDate:req.query.date
     };
     const batch = batchDB.doc(batchID).set(batchData);
@@ -47,5 +47,32 @@ const addUsersToBatch = async(req, res) => {
       res.status(400).json(`${userName} does not exist in Data-Base.`);
      }
 }
-
-module.exports = {createBatch, addUsersToBatch};
+//showing the batch as per name
+const searchBatchByID = async(req, res) => {
+ try {
+    const batchID  = req.query.batch_name;
+    const BatchData = await batchDB.doc(batchID).get();
+    if(BatchData.exists){
+        res.status(200).json(BatchData.data());
+    }else{
+        res.status(400).json(`${batchID} does not exist in Data-Base`);
+    }
+ } catch (error) {
+    console.log(error);
+ }
+}
+const showAllBatchs = async(req, res)=> {
+    try {
+        batchDB.get()
+        .then((QuerySnapshot) => {
+          let UserDataArr = [];
+          QuerySnapshot.forEach((doc) => {
+            UserDataArr.push(doc.data());
+          });
+          res.status(200).json(UserDataArr);
+        });
+    } catch (error) {
+        console.log(error);
+    }
+}
+module.exports = {createBatch, addUsersToBatch, searchBatchByID, showAllBatchs};
