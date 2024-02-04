@@ -6,6 +6,7 @@ const batchDB = db.collection('batchDB');
 const mainDB = db.collection('mainDB');
 
 const createBatch = async(req, res)=> {
+try {
     const batchID = req.query.name;
     const batchData = {
         batchName:req.query.name,
@@ -17,11 +18,47 @@ const createBatch = async(req, res)=> {
     };
     const batch = batchDB.doc(batchID).set(batchData);
     res.status(200).json(`${batchID} has been created please add users.`);
+} catch (error) {
+    console.log(error);
+}
 }
 
 const addUsersToBatch = async(req, res) => {
+    try {
+        const addUSer = {
+            username:req.query.username,
+            batchID:req.query.batch_name,
+        }
+        const batch = addUSer.batchID;
+        const userName = addUSer.username;
+        const batchalocate = {
+            allocated_batch:batch
+        }
+         const userfromdb = await mainDB.doc(userName).get();
+         if(userfromdb.exists){
+            const batchfromdb = await batchDB.doc(batch).get();
+            if(batchfromdb.exists){
+               const batchtochange = await batchDB.doc(batch).update({
+                batchUsers: admin.firestore.FieldValue.arrayUnion(userName),
+               }).then(
+                res.status(200).json(`${addUSer.username} is added to ${addUSer.batchID} batch`)
+                );
+               const user = await mainDB.doc(userName).update(batchalocate);
+            }
+             else{
+               res.status(400).json(`${batch} batch does not exist in Data-Base.`);
+            }
+         }else{
+          res.status(400).json(`${userName} does not exist in Data-Base.`);
+         }
+    } catch (error) {
+        console.log(error)
+    }
+}
+// add faculty to the batches
+const addFacultyToBatch = async(req, res)=> {
     const addUSer = {
-        username:req.query.username,
+        username:req.query.faculty_name,
         batchID:req.query.batch_name,
     }
     const batch = addUSer.batchID;
@@ -34,9 +71,9 @@ const addUsersToBatch = async(req, res) => {
         const batchfromdb = await batchDB.doc(batch).get();
         if(batchfromdb.exists){
            const batchtochange = await batchDB.doc(batch).update({
-            batchUsers: admin.firestore.FieldValue.arrayUnion(userName),
+            batch_faculty: admin.firestore.FieldValue.arrayUnion(userName),
            }).then(
-            res.status(200).json(`${addUSer.username} is added to ${addUSer.batchID} batch`)
+            res.status(200).json(`${addUSer.username} is added as Faculty to ${addUSer.batchID} batch`)
             );
            const user = await mainDB.doc(userName).update(batchalocate);
         }
@@ -46,6 +83,7 @@ const addUsersToBatch = async(req, res) => {
      }else{
       res.status(400).json(`${userName} does not exist in Data-Base.`);
      }
+
 }
 //showing the batch as per name
 const searchBatchByID = async(req, res) => {
@@ -75,4 +113,4 @@ const showAllBatchs = async(req, res)=> {
         console.log(error);
     }
 }
-module.exports = {createBatch, addUsersToBatch, searchBatchByID, showAllBatchs};
+module.exports = {createBatch, addUsersToBatch, searchBatchByID, showAllBatchs, addFacultyToBatch};

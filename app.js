@@ -22,6 +22,7 @@ const createBatch = require('./routes/route');
 const addUsersToBatch = require('./routes/route');
 const searchBatchByID = require('./routes/route');
 const showAllBatchs = require('./routes/route');
+const addFacultyToBatch = require('./routes/route');
 // Initilizing the PORT & dependencies
 const app = express();
 const PORT = process.env.PORT || 1013;
@@ -49,8 +50,10 @@ app.get('/searchtask', searchTaskById);
 app.get('/all-task', ReadallTask);
 app.post('/createbatch', createBatch);
 app.post('/addusertobatch', addUsersToBatch);
+app.post('/addFaculty', addFacultyToBatch);
 app.get('/search-Batch-ByID', searchBatchByID);
 app.get('/allBatch', showAllBatchs);
+
 // starting the server
 const start = async()=> {
     try {
