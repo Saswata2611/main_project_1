@@ -42,7 +42,7 @@ const getUserName = require('./routes/route');
 //  declearing the routes
 app.post('/register', InsertDataIntoMain);
 app.get('/see', async(req, res)=> {
-  res.status(200).json('Hello world');
+    res.send('Hello, World!');
 });
 app.get('/login', LoginUser);
 app.get('/read/username', ReadDataByUsername);
