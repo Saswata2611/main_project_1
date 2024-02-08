@@ -6,24 +6,25 @@ const taskDB = db.collection('taskDB');
 // Inserting users in the Main DB
 const InsertDataIntoMain = async(req, res)=> {
 try {
-  const UserID = req.query.username;
+  
   const date= new Date();
   const currentDate = date.toString();
   const userData = {
-    userName:req.query.username,
-    userEmail:req.query.email,
-    userPassword:req.query.password,
-    userRole:req.query.role,
-    userDesignation:req.query.designation,
-    organization_name:req.query.organization_name,
-    year:req.query.year,
+    userName:req.body.username,
+    userEmail:req.body.email,
+    userPassword:req.body.password,
+    userRole:req.body.role,
+    userDesignation:req.body.designation,
+    organization_name:req.body.organization_name,
+    year:req.body.year,
     allocated_batch:null,
     permanent_id:null,
     task_id:null,
-    join_date:req.query.joining_date,
+    join_date:req.body.joining_date,
     updated_at:currentDate
   };
-  const registerUser = mainDB.doc(UserID).set(userData);
+  const UserID = userData.userName;
+  await mainDB.doc(UserID).set(userData);
   res.status(200).json('User Registerd Sucessfully.');
 } catch (error) {
   console.log(error);
