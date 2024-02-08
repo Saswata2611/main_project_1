@@ -33,8 +33,8 @@ try {
 // Loggin in of the user
 const LoginUser = async(req, res)=> {
   try {
-    const username = req.query.username;
-    const password = req.query.password;
+    const username = req.body.username;
+    const password = req.body.password;
     let userdata = await mainDB.doc(username).get();
     if(userdata.exists){
         const DBpassword = userdata.data().userPassword;
@@ -55,7 +55,7 @@ const LoginUser = async(req, res)=> {
 //search By username
 const ReadDataByUsername = async(req, res)=> {
 try {
-  const username = req.query.username;
+  const username = req.body.username;
   let userData = await mainDB.doc(username).get();
   if(userData.exists){
     res.status(200).json(userData.data());
@@ -83,7 +83,7 @@ const ReadDataall = async(req, res)=> {
 // search by role
 const ReadDataByrole = async(req, res)=> {
   try {
-    const userRole = req.query.role;
+    const userRole = req.body.role;
     mainDB.get().then((QuerySnapshot)=> {
       let UserDataArr = [];
       QuerySnapshot.forEach((doc)=>{
@@ -103,10 +103,10 @@ const ReadDataByrole = async(req, res)=> {
 // Delete user data by the admin
 const DeleteData = async(req, res)=>{
   try {
-    const username = req.query.username;
+    const username = req.body.username;
     let userData = await mainDB.doc(username).get();
     if(userData.exists){
-      const deleteData = await mainDB.doc(username).delete();
+      await mainDB.doc(username).delete();
        res.status(200).json('Data Deleted Sucessfully');
     } 
     else{
@@ -119,15 +119,15 @@ const DeleteData = async(req, res)=>{
 //  updating the role of the user
 const UpdateData = async(req, res)=> {
 try {
-  const username = req.query.username;
-  const role = req.query.role;
+  const username = req.body.username;
+  const role = req.body.role;
   const date= new Date();
   const currentDate = date.toString();
   const uptoDate = {
     userRole:role,
     updated_at:currentDate
   }
-  let UserData = await mainDB.doc(username).update(uptoDate);
+  await mainDB.doc(username).update(uptoDate);
   res.status(200).json('User Role Updated Sucessfully');
 } catch (error) {
   console.log(error);
