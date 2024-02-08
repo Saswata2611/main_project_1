@@ -39,7 +39,8 @@ const LoginUser = async(req, res)=> {
     if(userdata.exists){
         const DBpassword = userdata.data().userPassword;
         if(DBpassword == password){
-           res.status(200).json('Welcome User');
+          //  res.status(200).json('Welcome User');
+          open('http://192.168.29.10:3000/admin/home')
         }else{
         res.status(400).json('Password is not matching with the Username');
     }

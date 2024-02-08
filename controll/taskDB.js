@@ -172,7 +172,7 @@ const sendTaskFileToBatch =  async (req, res) => {
         
         let batchdata = await batchDB.doc(batchname).get();
         if(batchdata.exists){
-         let updateData = await batchDB.doc(batchname).update(uptoDate);
+         await batchDB.doc(batchname).update(uptoDate);
          res.status(200).json(`Task uploaded to ${batchname} batch`);
         }else{
          res.status(400).json(`${batchname} batch is not present in the Database`);
@@ -222,7 +222,7 @@ const SubmitTaskFile = async(req, res)=>{
     }
     const taskData = await taskDB.doc(submitData.task_id).get();
     if(taskData.exists){
-     const taskuptodate = await taskDB.doc(submitData.task_id).update(uptoDate);
+     await taskDB.doc(submitData.task_id).update(uptoDate);
      res.status(200).json(`Task Submitted on ${currentDate} Successfully`);
     }
     else{
@@ -233,7 +233,7 @@ const SubmitTaskFile = async(req, res)=>{
 // search the tasks
 const searchTaskById = async(req, res)=> {
 try {
-  const task_id = req.query.task_id;
+  const task_id = req.body.task_id;
   const taskData = await taskDB.doc(task_id).get();
   if(taskData.exists){
     res.status(200).json(taskData.data());

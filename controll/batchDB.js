@@ -7,17 +7,18 @@ const mainDB = db.collection('mainDB');
 
 const createBatch = async(req, res)=> {
 try {
-    const batchID = req.query.name;
+    
     const batchData = {
-        batchName:req.query.name,
-        batchMonth:req.query.month,
-        batchCourse:req.query.course,
+        batchName:req.body.name,
+        batchMonth:req.body.month,
+        batchCourse:req.body.course,
         batchUsers:null,
         batch_faculty:null,
         task_id:null,
-        startDate:req.query.date
+        startDate:req.body.date
     };
-    const batch = batchDB.doc(batchID).set(batchData);
+    const batchID = batchData.batchName;
+    await batchDB.doc(batchID).set(batchData);
     res.status(200).json(`${batchID} has been created please add users.`);
 } catch (error) {
     console.log(error);
@@ -27,8 +28,8 @@ try {
 const addUsersToBatch = async(req, res) => {
     try {
         const addUSer = {
-            username:req.query.username,
-            batchID:req.query.batch_name,
+            username:req.body.username,
+            batchID:req.body.batch_name,
         }
         const batch = addUSer.batchID;
         const userName = addUSer.username;
@@ -39,7 +40,7 @@ const addUsersToBatch = async(req, res) => {
          if(userfromdb.exists){
             const batchfromdb = await batchDB.doc(batch).get();
             if(batchfromdb.exists){
-               const batchtochange = await batchDB.doc(batch).update({
+                await batchDB.doc(batch).update({
                 batchUsers: admin.firestore.FieldValue.arrayUnion(userName),
                }).then(
                 res.status(200).json(`${addUSer.username} is added to ${addUSer.batchID} batch`)
@@ -59,8 +60,8 @@ const addUsersToBatch = async(req, res) => {
 // add faculty to the batches
 const addFacultyToBatch = async(req, res)=> {
     const addUSer = {
-        username:req.query.faculty_name,
-        batchID:req.query.batch_name,
+        username:req.body.faculty_name,
+        batchID:req.body.batch_name,
     }
     const batch = addUSer.batchID;
     const userName = addUSer.username;
@@ -71,7 +72,7 @@ const addFacultyToBatch = async(req, res)=> {
      if(userfromdb.exists){
         const batchfromdb = await batchDB.doc(batch).get();
         if(batchfromdb.exists){
-           const batchtochange = await batchDB.doc(batch).update({
+            await batchDB.doc(batch).update({
             batch_faculty: admin.firestore.FieldValue.arrayUnion(userName),
            }).then(
             res.status(200).json(`${addUSer.username} is added as Faculty to ${addUSer.batchID} batch`)
@@ -118,8 +119,7 @@ const showAllBatchs = async(req, res)=> {
 // fetching the users name of the batches
 const getUserName = async(req, res)=> {
     try {
-
-        const batchID = req.query.batch_name;
+        const batchID = req.body.batch_name;
         const Data =await batchDB.doc(batchID).get();
         if(Data.exists){
         const batchData =await Data.data();
