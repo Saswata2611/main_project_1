@@ -1,14 +1,13 @@
 const { query } = require('express');
 const multer = require('multer');
 const functions = require('../firbase-config');
-
 const db =functions.db;
 const storage = functions.storage;
 
 
 const taskDB = db.collection('taskDB');
 const mainDB = db.collection('mainDB');
-
+const batchDB = db.collection('batchDB');
 // Asign Work to users
 const sendTaskFile =  async (req, res) => {
   try {
@@ -17,7 +16,7 @@ const sendTaskFile =  async (req, res) => {
         task_Name:req.body.taskname,
         allocated_to:req.body.username,
         task_Description:req.body.description,
-        task_file:req.file,
+        task_file:req.file, // filename
         submitted_file:null,
         task_submittion_date:req.body.date,
         task_submitted_on:null,
@@ -25,8 +24,24 @@ const sendTaskFile =  async (req, res) => {
     };
     if(taskData.task_file == null){
         taskData.task_file = null;
-        await taskDB.add(taskData);
-        res.status(200).json('Task Has Been Uploaded');
+        const docRef = await taskDB.add(taskData);
+        const username =  taskData.allocated_to;
+        const task_id = docRef.id;
+        const date= new Date();
+        const currentDate = date.toString();
+        const uptoDate = {
+            task_id:task_id,
+            updated_at:currentDate
+        }
+        
+        let UserData = await mainDB.doc(username).get();
+        if(UserData.exists){
+         let updateData = await mainDB.doc(username).update(uptoDate);
+         res.status(200).json(`Task has been assigned to ${username}`);
+        }else{
+            res.status(400).json(`There is no data of ${username}`);
+        }
+        
     }
     else if(taskData.task_file != null){
      // Upload the file to Firebase Storage
@@ -82,12 +97,96 @@ const sendTaskFile =  async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(404).json({ error: 'Error Happend in the code' });
   }
 };
 
+// sending the tasks to the batches
+const sendTaskFileToBatch =  async (req, res) => {
+  try {
+   
+    const taskData = {
+        task_name:req.body.taskname,
+        allocated_to_batch:req.body.batch_name,
+        task_Description:req.body.description,
+        task_file:req.file, // filename
+        submitted_file:null,
+        task_submittion_date:req.body.date,
+        task_submitted_on:null,
+        task_remarks:'pending'
+    };
+    if(taskData.task_file == null){
+        taskData.task_file = null;
+        const docRef = await taskDB.add(taskData);
+        const batchname =  taskData.allocated_to_batch;
+        const task_id = docRef.id;
+        const uptoDate = {
+            task_id:task_id,
+        }
+         let batchdata = await batchDB.doc(batchname).get();
+         if(batchdata.exists){
+          let updateData = await batchDB.doc(batchname).update(uptoDate);
+          res.status(200).json(`Task uploaded to ${batchname} batch`);
+         }else{
+          res.status(400).json(`${batchname} batch is not present in the Database`);
+         }
+    }
+    else if(taskData.task_file != null){
+     // Upload the file to Firebase Storage
+    const fileName = Date.now().toString(); // You can generate a unique filename
+    const fileUpload = storage.file(fileName);
+    const metadata = {
+      metadata: {
+        contentType: req.file.mimetype,
+      },
+    };
+    await fileUpload.save(req.file.buffer, metadata);
 
-// Submit the work of the user
+    // Get the download URL
+    const downloadURL = await storage.file(fileName).getSignedUrl({
+      action: 'read',
+      expires: '03-09-2100', // Set an expiration date if needed
+    });
+    // store ta file in firebase storage
+    const fileMetadata = {
+        name: req.file.originalname,
+        type: req.file.mimetype,
+        downloadURL: downloadURL[0],
+      };
+      // putting the task data into the taskDB
+      const taskdata = {
+        task_name:req.body.taskname,
+        allocated_to_batch:req.body.batch_name,
+        task_Description:req.body.description,
+        task_file:fileMetadata.downloadURL,
+        submitted_file:null,
+        task_submittion_date:req.body.date,
+        task_remarks:'pending'
+    };
+        const docRef = await taskDB.add(taskdata);
+        const batchname =  taskData.allocated_to_batch;
+        const task_id = docRef.id;
+        const uptoDate = {
+            task_id:task_id,
+        }
+        
+        let batchdata = await batchDB.doc(batchname).get();
+        if(batchdata.exists){
+         let updateData = await batchDB.doc(batchname).update(uptoDate);
+         res.status(200).json(`Task uploaded to ${batchname} batch`);
+        }else{
+         res.status(400).json(`${batchname} batch is not present in the Database`);
+        }
+        
+    }
+
+  } catch (error) {
+    console.error(error);
+    res.status(404).json({ error: 'Error Happend in the code' });
+  }
+}
+
+// Submit the work by the user
 const SubmitTaskFile = async(req, res)=>{
     const submitData = {
         task_id:req.body.task_id,
@@ -144,6 +243,7 @@ try {
   }
 } catch (error) {
   console.log(error);
+  res.status(404).json({ error: 'Error Happend in the code' });
 }
 }
 
@@ -160,8 +260,9 @@ try {
   });
 } catch (error) {
   console.log(error)
+  res.status(404).json({ error: 'Error Happend in the code' });
 }
 }
-module.exports = { sendTaskFile, SubmitTaskFile, searchTaskById, ReadallTask };
+module.exports = { sendTaskFile, SubmitTaskFile, searchTaskById, ReadallTask,sendTaskFileToBatch };
 
 
