@@ -9,13 +9,14 @@ const createBatch = async(req, res)=> {
 try {
     
     const batchData = {
-        batchName:req.body.name,
-        batchMonth:req.body.month,
-        batchCourse:req.body.course,
+        batchName:req.query.name,
+        batchMonth:req.query.month,
+        batchCourse:req.query.course,
         batchUsers:null,
         batch_faculty:null,
         task_id:null,
-        startDate:req.body.date
+        task_status:null,
+        startDate:req.query.date
     };
     const batchID = batchData.batchName;
     await batchDB.doc(batchID).set(batchData);
@@ -28,8 +29,8 @@ try {
 const addUsersToBatch = async(req, res) => {
     try {
         const addUSer = {
-            username:req.body.username,
-            batchID:req.body.batch_name,
+            username:req.query.username,
+            batchID:req.query.batch_name,
         }
         const batch = addUSer.batchID;
         const userName = addUSer.username;
@@ -59,9 +60,10 @@ const addUsersToBatch = async(req, res) => {
 }
 // add faculty to the batches
 const addFacultyToBatch = async(req, res)=> {
+   try {
     const addUSer = {
-        username:req.body.faculty_name,
-        batchID:req.body.batch_name,
+        username:req.query.faculty_name,
+        batchID:req.query.batch_name,
     }
     const batch = addUSer.batchID;
     const userName = addUSer.username;
@@ -86,6 +88,9 @@ const addFacultyToBatch = async(req, res)=> {
       res.status(400).json(`${userName} does not exist in Data-Base.`);
      }
 
+   } catch (error) {
+    console.log(error);    
+   }
 }
 //showing the batch as per name
 const searchBatchByID = async(req, res) => {
@@ -116,34 +121,5 @@ const showAllBatchs = async(req, res)=> {
     }
 }
 
-// fetching the users name of the batches
-const getUserName = async(req, res)=> {
-    try {
-        const batchID = req.body.batch_name;
-        const Data =await batchDB.doc(batchID).get();
-        if(Data.exists){
-        const batchData =await Data.data();
-        const batch_users = await batchData.batchUsers;
-        const length = batch_users.length;
-        for(i = 0; i <length; i++){
-        const daata  = await mainDB.doc(batch_users[i]).get();
-        if(daata.exists){
-        const userData = await daata.data();
-        const uptoDate = {
-            task_id:'Hello World'
-        }
-        await mainDB.doc(batch_users[i]).update(uptoDate); 
-        }else{
-            res.status(400).json(`${batch_users[i]} does not exist in the database`);
-        }
-        }
-        res.status(200).json('task is updated to all users');
-        }else{
-            res.status(400).json('Batch Does Not exist in Database');
-        }
-        
-    } catch (error) {
-        console.log(error);
-    }
-}
-module.exports = {createBatch, addUsersToBatch, searchBatchByID, showAllBatchs, addFacultyToBatch, getUserName};
+
+module.exports = {createBatch, addUsersToBatch, searchBatchByID, showAllBatchs, addFacultyToBatch};

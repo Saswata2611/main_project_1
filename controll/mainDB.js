@@ -1,8 +1,11 @@
-const { query } = require('express');
+const { query, response, Router } = require('express');
 const functions = require('../firbase-config');
+const router = require('../routes/route');
 const db = functions.db;
 const mainDB = db.collection('mainDB');
 const taskDB = db.collection('taskDB');
+const admin = functions.admin;
+
 // Inserting users in the Main DB
 const InsertDataIntoMain = async(req, res)=> {
 try {
@@ -10,17 +13,18 @@ try {
   const date= new Date();
   const currentDate = date.toString();
   const userData = {
-    userName:req.body.username,
-    userEmail:req.body.email,
-    userPassword:req.body.password,
-    userRole:req.body.role,
-    userDesignation:req.body.designation,
-    organization_name:req.body.organization_name,
-    year:req.body.year,
+    userName:req.query.username,
+    userEmail:req.query.email,
+    userPassword:req.query.password,
+    userRole:req.query.role,
+    userDesignation:req.query.designation,
+    organization_name:req.query.organization_name,
+    year:req.query.year,
     allocated_batch:null,
     permanent_id:null,
     task_id:null,
-    join_date:req.body.joining_date,
+    task_status:null,
+    join_date:req.query.joining_date,
     updated_at:currentDate
   };
   const UserID = userData.userName;
@@ -32,22 +36,29 @@ try {
 }
 // Loggin in of the user
 const LoginUser = async(req, res)=> {
+  
   try {
-    const username = req.body.username;
-    const password = req.body.password;
-    let userdata = await mainDB.doc(username).get();
+    const  username  = req.query.username;
+    const Password = req.query.password;
+    let userdata = await mainDB.doc(username).get();   
     if(userdata.exists){
+        
         const DBpassword = userdata.data().userPassword;
-        if(DBpassword == password){
-          //  res.status(200).json('Welcome User');
-          open('http://192.168.29.10:3000/admin/home')
+        
+        if(DBpassword == Password){
+            // if(userdata.data().userRole == 'Student'){
+            //   res.redirect();
+            // }else if(userdata.data().userRole == 'Faculty'){
+            //   response.redirect();
+            // }
+            res.status(200).json('login Sucessfull');
         }else{
         res.status(400).json('Password is not matching with the Username');
     }
-    }
-    else{
-        res.status(400).json('Username is not present in the Database');
-    }
+    
+  }else{
+    res.status(400).json('Username couldnot found');
+  }
 } catch (error) {
     console.log(error);
 }
@@ -56,7 +67,7 @@ const LoginUser = async(req, res)=> {
 //search By username
 const ReadDataByUsername = async(req, res)=> {
 try {
-  const username = req.body.username;
+  const username = req.query.username;
   let userData = await mainDB.doc(username).get();
   if(userData.exists){
     res.status(200).json(userData.data());
@@ -71,6 +82,7 @@ try {
 
 // show  all users at a time
 const ReadDataall = async(req, res)=> {
+try {
   mainDB.get()
   .then((QuerySnapshot) => {
     let UserDataArr = [];
@@ -79,6 +91,9 @@ const ReadDataall = async(req, res)=> {
     });
     res.status(200).json(UserDataArr);
   })
+} catch (error) {
+  console.log(error);
+}
 }
 
 // search by role
@@ -120,8 +135,8 @@ const DeleteData = async(req, res)=>{
 //  updating the role of the user
 const UpdateData = async(req, res)=> {
 try {
-  const username = req.body.username;
-  const role = req.body.role;
+  const username = req.query.username;
+  const role = req.query.role;
   const date= new Date();
   const currentDate = date.toString();
   const uptoDate = {
@@ -134,5 +149,31 @@ try {
   console.log(error);
 }
 }
+
+// Updating the Password by the user
+const ChangeThePassword = async(req, res)=> {
+try {
+  const username = req.query.username;
+  const password = req.query.password;
+  const cpassword = req.query.cpass;
+  if(password == cpassword){
+    const userData = await mainDB.doc(username).get();
+    if(userData.exists){
+      const uptodate = {
+        userPassword:password
+      }
+      await mainDB.doc(username).update(uptodate);
+      res.status(200).json('Password Changed Sucessfully');
+    }else{
+      res.status(400).json('Username Could Not Found');
+    }
+  }else{
+  res.status(400).json('Password and Confirm Password in Not Matching.');
+}
+} catch (error) {
+ console.log(error); 
+}
+}
+
 //exporting the functions to the app.js page
-module.exports = {InsertDataIntoMain, LoginUser, ReadDataByUsername,ReadDataall, ReadDataByrole ,DeleteData, UpdateData};
+module.exports = {InsertDataIntoMain, LoginUser, ReadDataByUsername,ReadDataall, ReadDataByrole ,DeleteData, UpdateData, ChangeThePassword};

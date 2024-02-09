@@ -20,7 +20,7 @@ const sendTaskFile =  async (req, res) => {
         submitted_file:null,
         task_submittion_date:req.body.date,
         task_submitted_on:null,
-        task_remarks:'pending'
+        task_remarks:'Pending'
     };
     if(taskData.task_file == null){
         taskData.task_file = null;
@@ -31,6 +31,7 @@ const sendTaskFile =  async (req, res) => {
         const currentDate = date.toString();
         const uptoDate = {
             task_id:task_id,
+            task_status:'Pending',
             updated_at:currentDate
         }
         
@@ -73,7 +74,7 @@ const sendTaskFile =  async (req, res) => {
         task_file:fileMetadata.downloadURL,
         submitted_file:null,
         task_submittion_date:req.body.date,
-        task_remarks:'pending'
+        task_remarks:'Pending'
     };
         const docRef = await taskDB.add(taskData);
         const username =  taskData.allocated_to;
@@ -82,6 +83,7 @@ const sendTaskFile =  async (req, res) => {
         const currentDate = date.toString();
         const uptoDate = {
             task_id:task_id,
+            task_status:'Pending',
             updated_at:currentDate
         }
         
@@ -97,7 +99,7 @@ const sendTaskFile =  async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(404).json({ error: 'Error Happend in the code' });
+    res.status(400).json({ error: 'Error Happend in the code' });
   }
 };
 
@@ -113,7 +115,7 @@ const sendTaskFileToBatch =  async (req, res) => {
         submitted_file:null,
         task_submittion_date:req.body.date,
         task_submitted_on:null,
-        task_remarks:'pending'
+        task_remarks:'Pending'
     };
     if(taskData.task_file == null){
         taskData.task_file = null;
@@ -122,13 +124,22 @@ const sendTaskFileToBatch =  async (req, res) => {
         const task_id = docRef.id;
         const uptoDate = {
             task_id:task_id,
+            task_status:'pending',
         }
          let batchdata = await batchDB.doc(batchname).get();
          if(batchdata.exists){
-          let updateData = await batchDB.doc(batchname).update(uptoDate);
-          res.status(200).json(`Task uploaded to ${batchname} batch`);
-         }else{
-          res.status(400).json(`${batchname} batch is not present in the Database`);
+              await batchDB.doc(batchname).update(uptoDate);
+              const batchData = batchdata.data();
+              const batch_users = await batchData.batchUsers;
+              const length = batch_users.length;
+              for(i = 0; i <= length-1; i++){
+                  const user = batch_users[i];
+                  await mainDB.doc(user).update(uptoDate);
+              }
+               res.status(200).json('Task Has Been Uploaded to the Batch Members');
+         }
+         else{
+          res.status(400).json(`${taskData.allocated_to_batch} batch is not present in the Database`);
          }
     }
     else if(taskData.task_file != null){
@@ -161,79 +172,94 @@ const sendTaskFileToBatch =  async (req, res) => {
         task_file:fileMetadata.downloadURL,
         submitted_file:null,
         task_submittion_date:req.body.date,
-        task_remarks:'pending'
+        task_remarks:'Pending'
     };
         const docRef = await taskDB.add(taskdata);
         const batchname =  taskData.allocated_to_batch;
         const task_id = docRef.id;
         const uptoDate = {
             task_id:task_id,
+            task_status:'Pending'
         }
         
         let batchdata = await batchDB.doc(batchname).get();
         if(batchdata.exists){
-         await batchDB.doc(batchname).update(uptoDate);
-         res.status(200).json(`Task uploaded to ${batchname} batch`);
-        }else{
-         res.status(400).json(`${batchname} batch is not present in the Database`);
-        }
+          await batchDB.doc(batchname).update(uptoDate);
+          const batchData = batchdata.data();
+          const batch_users = await batchData.batchUsers;
+          const length = batch_users.length;
+          for(i = 0; i <= length-1; i++){
+              const user = batch_users[i];
+              await mainDB.doc(user).update(uptoDate);
+          }
+           res.status(200).json('Task Has Been Uploaded to the Batch Members');
+     }
+     else{
+      res.status(400).json(`${taskdata.allocated_to_batch} batch is not present in the Database`);
+     }
         
     }
 
   } catch (error) {
-    console.error(error);
-    res.status(404).json({ error: 'Error Happend in the code' });
+    console.log(error);
   }
 }
 
 // Submit the work by the user
 const SubmitTaskFile = async(req, res)=>{
+  try {
     const submitData = {
-        task_id:req.body.task_id,
-        task_file:req.file
-    };
-    const fileName = Date.now().toString(); // You can generate a unique filename
-    const fileUpload = storage.file(fileName);
-    const metadata = {
-      metadata: {
-        contentType: req.file.mimetype,
-      },
-    };
-    await fileUpload.save(req.file.buffer, metadata);
+      task_id:req.body.task_id,
+      task_file:req.file
+  };
+  const fileName = Date.now().toString(); // You can generate a unique filename
+  const fileUpload = storage.file(fileName);
+  const metadata = {
+    metadata: {
+      contentType: req.file.mimetype,
+    },
+  };
+  await fileUpload.save(req.file.buffer, metadata);
 
-    // Get the download URL
-    const downloadURL = await storage.file(fileName).getSignedUrl({
-      action: 'read',
-      expires: '03-09-2100', // Set an expiration date if needed
-    });
-    // geting the date and time
-    const date = new Date();
-    const currentDate = date.toString();
-    // store ta file in firebase storage
-    const fileMetadata = {
-        name: req.file.originalname,
-        type: req.file.mimetype,
-        downloadURL: downloadURL[0],
-      };
-    const uptoDate = {
-        submitted_file:fileMetadata.downloadURL,
-        task_submitted_on:currentDate,
-        task_remarks:'Submitted'
-    }
-    const taskData = await taskDB.doc(submitData.task_id).get();
-    if(taskData.exists){
-     await taskDB.doc(submitData.task_id).update(uptoDate);
-     res.status(200).json(`Task Submitted on ${currentDate} Successfully`);
-    }
-    else{
-        res.status(400).json('Can not find the Task');
-    }
+  // Get the download URL
+  const downloadURL = await storage.file(fileName).getSignedUrl({
+    action: 'read',
+    expires: '03-09-2100', // Set an expiration date if needed
+  });
+  // geting the date and time
+  const date = new Date();
+  const currentDate = date.toString();
+  // store ta file in firebase storage
+  const fileMetadata = {
+      name: req.file.originalname,
+      type: req.file.mimetype,
+      downloadURL: downloadURL[0],
+    };
+  const uptoDate = {
+      submitted_file:fileMetadata.downloadURL,
+      task_submitted_on:currentDate,
+      task_remarks:'Submitted'
+  }
+  
+  const taskData = await taskDB.doc(submitData.task_id).get();
+  const username = taskData.allocated_to;
+  if(taskData.exists){
+   await taskDB.doc(submitData.task_id).update(uptoDate);
+   await mainDB.doc(username).update(uptoDate);
+   res.status(200).json(`Task Submitted on ${currentDate} Successfully`);
+  }
+  else{
+      res.status(400).json('Can not find the Task');
+  }
+  } catch (error) {
+   console.log(error); 
+  }
     
 }
 // search the tasks
 const searchTaskById = async(req, res)=> {
 try {
-  const task_id = req.body.task_id;
+  const task_id = req.query.task_id;
   const taskData = await taskDB.doc(task_id).get();
   if(taskData.exists){
     res.status(200).json(taskData.data());
