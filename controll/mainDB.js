@@ -42,16 +42,12 @@ const LoginUser = async(req, res)=> {
     const Password = req.query.password;
     let userdata = await mainDB.doc(username).get();   
     if(userdata.exists){
-        
+        const user = userdata.data().userRole;
         const DBpassword = userdata.data().userPassword;
         
         if(DBpassword == Password){
-            // if(userdata.data().userRole == 'Student'){
-            //   res.redirect();
-            // }else if(userdata.data().userRole == 'Faculty'){
-            //   response.redirect();
-            // }
-            res.status(200).json('login Sucessfull');
+          
+            res.status(200).json(user);
         }else{
         res.status(400).json('Password is not matching with the Username');
     }
@@ -119,7 +115,7 @@ const ReadDataByrole = async(req, res)=> {
 // Delete user data by the admin
 const DeleteData = async(req, res)=>{
   try {
-    const username = req.body.username;
+    const username = req.query.username;
     let userData = await mainDB.doc(username).get();
     if(userData.exists){
       await mainDB.doc(username).delete();
@@ -137,6 +133,7 @@ const UpdateData = async(req, res)=> {
 try {
   const username = req.query.username;
   const role = req.query.role;
+
   const date= new Date();
   const currentDate = date.toString();
   const uptoDate = {
@@ -146,7 +143,7 @@ try {
   await mainDB.doc(username).update(uptoDate);
   res.status(200).json('User Role Updated Sucessfully');
 } catch (error) {
-  console.log(error);
+  console.log(error); 
 }
 }
 

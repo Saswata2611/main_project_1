@@ -2,6 +2,7 @@ const { query } = require('express');
 const multer = require('multer');
 const functions = require('../firbase-config');
 const db =functions.db;
+const admin = functions.admin;
 const storage = functions.storage;
 
 
@@ -37,8 +38,14 @@ const sendTaskFile =  async (req, res) => {
         
         let UserData = await mainDB.doc(username).get();
         if(UserData.exists){
-         let updateData = await mainDB.doc(username).update(uptoDate);
-         res.status(200).json(`Task has been assigned to ${username}`);
+        //  let updateData = await mainDB.doc(username).update(uptoDate);
+        await mainDB.doc(username).update({
+          task_id: admin.firestore.FieldValue.arrayUnion(uptoDate.task_id),
+          task_status:uptoDate.task_status
+         }).then(
+          res.status(200).json(`Task has been assigned to ${username}`)
+         );
+         
         }else{
             res.status(400).json(`There is no data of ${username}`);
         }
@@ -89,8 +96,12 @@ const sendTaskFile =  async (req, res) => {
         
         let UserData = await mainDB.doc(username).get();
         if(UserData.exists){
-         let updateData = await mainDB.doc(username).update(uptoDate);
-         res.status(200).json(`Task has been assigned to ${username}`);
+          await mainDB.doc(username).update({
+            task_id: admin.firestore.FieldValue.arrayUnion(uptoDate.task_id),
+            task_status:uptoDate.task_status
+           }).then(
+            res.status(200).json(`Task has been assigned to ${username}`)
+           );
         }else{
             res.status(400).json(`There is no data of ${username}`);
         }
@@ -117,6 +128,7 @@ const sendTaskFileToBatch =  async (req, res) => {
         task_submitted_on:null,
         task_remarks:'Pending'
     };
+    // console.log(taskData);
     if(taskData.task_file == null){
         taskData.task_file = null;
         const docRef = await taskDB.add(taskData);
@@ -134,9 +146,13 @@ const sendTaskFileToBatch =  async (req, res) => {
               const length = batch_users.length;
               for(i = 0; i <= length-1; i++){
                   const user = batch_users[i];
-                  await mainDB.doc(user).update(uptoDate);
+                  await mainDB.doc(user).update({
+                    task_id: admin.firestore.FieldValue.arrayUnion(uptoDate.task_id),
+                    task_status:uptoDate.task_status
+                   });
               }
-               res.status(200).json('Task Has Been Uploaded to the Batch Members');
+              res.status(200).json('Task Has Been Uploaded to the Batch Members')
+               
          }
          else{
           res.status(400).json(`${taskData.allocated_to_batch} batch is not present in the Database`);
@@ -190,7 +206,10 @@ const sendTaskFileToBatch =  async (req, res) => {
           const length = batch_users.length;
           for(i = 0; i <= length-1; i++){
               const user = batch_users[i];
-              await mainDB.doc(user).update(uptoDate);
+              await mainDB.doc(user).update({
+                task_id: admin.firestore.FieldValue.arrayUnion(uptoDate.task_id),
+                task_status:uptoDate.task_status
+               });
           }
            res.status(200).json('Task Has Been Uploaded to the Batch Members');
      }

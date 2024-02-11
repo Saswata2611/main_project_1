@@ -4,7 +4,7 @@ const router = express.Router(); // parsed the Router package from express
 // // requiring the functions of the mainDB controll page
 const {InsertDataIntoMain, LoginUser, ReadDataByUsername, ReadDataall , ReadDataByrole, DeleteData, UpdateData, ChangeThePassword} = require('../controll/mainDB');
 const {sendTaskFile,SubmitTaskFile, searchTaskById, ReadallTask, sendTaskFileToBatch} = require('../controll/taskDB');
-const {createBatch, addUsersToBatch, searchBatchByID, showAllBatchs, addFacultyToBatch} = require('../controll/batchDB')
+const {createBatch, addUsersToBatch, searchBatchByID, showAllBatchs, addFacultyToBatch, DeleteBatch, deleteStudent} = require('../controll/batchDB')
 router.route('/register').post(InsertDataIntoMain);
 router.route('/login').get(LoginUser);
 router.route('/read/username').get(ReadDataByUsername);
@@ -26,6 +26,6 @@ router.route('/addusertobatch').post(addUsersToBatch);
 router.route('/search-Batch-ByID').get(searchBatchByID);
 router.route('/allBatch').get(showAllBatchs);
 router.route('/addFaculty').post(addFacultyToBatch);
-
-
+router.route('/deletebatch').delete(DeleteBatch);
+router.route('/deletestudent').delete(deleteStudent);
 module.exports = router;

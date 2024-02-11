@@ -37,8 +37,8 @@ const addUsersToBatch = require('./routes/route'); // route to add users to the 
 const searchBatchByID = require('./routes/route'); //route to search a batch  by its name or ID
 const showAllBatchs = require('./routes/route');// route to show all the batches present in the Database
 const addFacultyToBatch = require('./routes/route');//route to allocate faculty to the batches
-
-
+const DeleteBatch= require('./routes/route');
+const deleteStudent = require('./routes/route');
 //  declearing the routes
 app.post('/register',cors(), InsertDataIntoMain);// endpoint of user register
 app.get('/login', LoginUser);// endpoint of login of the user
@@ -64,6 +64,10 @@ app.post('/uploadtobatch', upload.single('filename'), sendTaskFileToBatch, (err,
     if(err) throw err;
 });
 app.put('/update/password', ChangeThePassword);
+app.delete('/deletebatch', DeleteBatch);
+app.delete('/deletestudent', deleteStudent);
+
+
 
 // starting the server
 const start = async()=> {
