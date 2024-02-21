@@ -8,7 +8,7 @@ const bodyParse = require('body-parser'); // required the body-parser package
 const app = express();// intialiased the express package in app
 const PORT = process.env.PORT || 1013; // initialised the port for  my application
 const upload = multer({ storage: multer.memoryStorage() });//call multer memory storage in upload variable
-
+const uploadexcel = multer({ dest: 'uploads/' });
 // Use this lines when you want to take user input from body and as a json file
 app.use(bodyParse.json()); // intialised bodyparse dependency to fetch the json data into body format
 app.use(bodyParse.urlencoded({extended: true}));// intialised the bodyparser to encode the url inputs
@@ -25,6 +25,7 @@ const DeleteData = require('./routes/route'); // route to delete any user data f
 const UpdateData  = require('./routes/route'); // route to update the role of the user
 const ReadDataByrole = require('./routes/route');// route to get all the data by the user roles
 const ChangeThePassword = require('./routes/route');// route to change the user password
+const main = require('./routes/route');
 //from taskDB
 const searchTaskById = require('./routes/route'); // route to get the tasks by task ID
 const sendTaskFile = require('./routes/route'); //route to send task file to the users or the students individually
@@ -39,6 +40,10 @@ const showAllBatchs = require('./routes/route');// route to show all the batches
 const addFacultyToBatch = require('./routes/route');//route to allocate faculty to the batches
 const DeleteBatch= require('./routes/route');
 const deleteStudent = require('./routes/route');
+//from communityDB
+const {uploadCSV} = require('./controll/communityDB');
+const csvdatatomainDB = require('./routes/route');
+
 //  declearing the routes
 app.post('/register',cors(), InsertDataIntoMain);// endpoint of user register
 app.get('/login', LoginUser);// endpoint of login of the user
@@ -66,9 +71,36 @@ app.post('/uploadtobatch', upload.single('filename'), sendTaskFileToBatch, (err,
 app.put('/update/password', ChangeThePassword);
 app.delete('/deletebatch', DeleteBatch);
 app.delete('/deletestudent', deleteStudent);
+app.post('/uploadcsv', uploadexcel.single('csv'), (req, res) => {
+   if(req.file){
+    const csvFilePath = req.file.path;
+    uploadCSV(csvFilePath);
+    res.status(200).json('CSV file upload started.');
+   }
+   else{
+    res.status(400).json('bad request');
+   }
+});
+app.post('/uploadcsvdata', csvdatatomainDB);
+app.post('/mailall', main);
 
-
-
+// making a function to keep my website api warm
+const warmApi = async()=> {
+    const apiUrl = 'https://main-project-for-avik-sir.onrender.com/read';
+  
+    try {
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        console.log('API warmed successfully');
+      } else {
+        console.error('Failed to warm API:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error warming API:', error.message);
+    }
+  }
+  const intervalTime = 5 * 60 * 1000;
+  const intervalId = setInterval(warmApi, intervalTime)
 // starting the server
 const start = async()=> {
     try {

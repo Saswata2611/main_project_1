@@ -1,10 +1,11 @@
 const { query, response, Router } = require('express');
 const functions = require('../firbase-config');
-const router = require('../routes/route');
 const db = functions.db;
 const mainDB = db.collection('mainDB');
 const taskDB = db.collection('taskDB');
+const communityDB = db.collection('communityDB');
 const admin = functions.admin;
+const nodemailer = require('nodemailer');
 
 // Inserting users in the Main DB
 const InsertDataIntoMain = async(req, res)=> {
@@ -46,7 +47,7 @@ const LoginUser = async(req, res)=> {
         const DBpassword = userdata.data().userPassword;
         
         if(DBpassword == Password){
-          
+
             res.status(200).json(user);
         }else{
         res.status(400).json('Password is not matching with the Username');
@@ -172,5 +173,50 @@ try {
 }
 }
 
+const transporter = nodemailer.createTransport({
+  service:'gmail',
+  auth: {
+    user: 'saswataghatak70@gmail.com',
+    pass: 'gsik npsk ksxa upaz'
+  }
+});
+
+async function getuserEmail(){
+  const snapshot = await communityDB.get();
+  const userEmails = [];
+  snapshot.forEach(doc => {
+    const email = doc.data().email;
+    userEmails.push(email);
+  });
+  return userEmails;
+};
+
+async function sendEmails(userEmails){
+  const mailOption = {
+    from: 'saswataghatak70@gmail.com',
+    to:userEmails.join(', '),
+    subject: 'Test Email',
+    text: ' Its Just a Testing mail'
+  }
+
+  try {
+     await transporter.sendMail(mailOption);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+const main = async(req, res)=> {
+  try{
+    const userEmail = await getuserEmail();
+    await sendEmails(userEmail); 
+    res.status(200).json('email sent');
+  }
+  catch(error){
+    console.log(error);
+  }
+}
+
+
 //exporting the functions to the app.js page
-module.exports = {InsertDataIntoMain, LoginUser, ReadDataByUsername,ReadDataall, ReadDataByrole ,DeleteData, UpdateData, ChangeThePassword};
+module.exports = {InsertDataIntoMain, LoginUser, ReadDataByUsername,ReadDataall, ReadDataByrole ,DeleteData, UpdateData, ChangeThePassword, main};
