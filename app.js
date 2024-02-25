@@ -25,7 +25,8 @@ const DeleteData = require('./routes/route'); // route to delete any user data f
 const UpdateData  = require('./routes/route'); // route to update the role of the user
 const ReadDataByrole = require('./routes/route');// route to get all the data by the user roles
 const ChangeThePassword = require('./routes/route');// route to change the user password
-const main = require('./routes/route');
+const sendNotification = require('./routes/route');
+const readnotification = require('./routes/route');
 //from taskDB
 const searchTaskById = require('./routes/route'); // route to get the tasks by task ID
 const sendTaskFile = require('./routes/route'); //route to send task file to the users or the students individually
@@ -43,7 +44,9 @@ const deleteStudent = require('./routes/route');
 //from communityDB
 const {uploadCSV} = require('./controll/communityDB');
 const csvdatatomainDB = require('./routes/route');
-
+//from MailDb
+const {uploadCSVformarketing} = require('./controll/mailBB');
+const main = require('./routes/route');
 //  declearing the routes
 app.post('/register',cors(), InsertDataIntoMain);// endpoint of user register
 app.get('/login', LoginUser);// endpoint of login of the user
@@ -83,7 +86,18 @@ app.post('/uploadcsv', uploadexcel.single('csv'), (req, res) => {
 });
 app.post('/uploadcsvdata', csvdatatomainDB);
 app.post('/mailall', main);
-
+app.post('/uploadcsvformarketing', uploadexcel.single('csv'), (req, res) => {
+    if(req.file){
+     const csvFilePath = req.file.path;
+     uploadCSVformarketing(csvFilePath);
+     res.status(200).json('CSV file upload started.');
+    }
+    else{
+     res.status(400).json('bad request');
+    }
+ });
+ app.post('/notify', sendNotification);
+ app.get('/readnotification', readnotification);
 // making a function to keep my website api warm
 const warmApi = async()=> {
     const apiUrl = 'https://main-project-for-avik-sir.onrender.com/read';
@@ -105,7 +119,7 @@ const warmApi = async()=> {
 const start = async()=> {
     try {
         app.listen(PORT, ()=>{
-            console.log(`your api url is http://localhost:${PORT}`);
+            console.log(`your api url is http://192.168.29.134:${PORT}`);
         });
     } catch (error) {
         console.log(error);

@@ -254,17 +254,17 @@ const SubmitTaskFile = async(req, res)=>{
       type: req.file.mimetype,
       downloadURL: downloadURL[0],
     };
+
   const uptoDate = {
       submitted_file:fileMetadata.downloadURL,
       task_submitted_on:currentDate,
       task_remarks:'Submitted'
   }
-  
+
   const taskData = await taskDB.doc(submitData.task_id).get();
   const username = taskData.allocated_to;
   if(taskData.exists){
    await taskDB.doc(submitData.task_id).update(uptoDate);
-   await mainDB.doc(username).update(uptoDate);
    res.status(200).json(`Task Submitted on ${currentDate} Successfully`);
   }
   else{
@@ -281,7 +281,8 @@ try {
   const task_id = req.query.task_id;
   const taskData = await taskDB.doc(task_id).get();
   if(taskData.exists){
-    res.status(200).json(taskData.data());
+    const taskdata=taskData.data();
+    res.status(200).json({taskdata, task_id});
   }
   else{
     res.status(400).json('Sorry This Task does not exist in Data-Base');

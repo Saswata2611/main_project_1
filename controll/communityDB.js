@@ -2,8 +2,6 @@ const { query } = require('express');
 const multer = require('multer');
 const functions = require('../firbase-config');
 const db =functions.db;
-const admin = functions.admin;
-const storage = functions.storage;
 const fs = require('fs');
 const csv = require('csv-parser');
 
