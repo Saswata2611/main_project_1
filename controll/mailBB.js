@@ -37,6 +37,9 @@ const uploadCSVformarketing = (csvFilePath) => {
     
 const transporter = nodemailer.createTransport({
     service:'gmail',
+    host:'smtp.gmail.com',
+    port:587,
+    secure:false,
     auth: {
       user: 'saswataghatak70@gmail.com',
       pass: 'gsik npsk ksxa upaz'

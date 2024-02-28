@@ -153,7 +153,7 @@ const deleteStudent = async(req, res)=> {
               await batchDB.doc(batch).update({
                 batchUsers: admin.firestore.FieldValue.arrayRemove(userName),
               }).then(() => {
-              res.status(200).json(`${userName} is removed as Faculty from ${batch} batch`);
+              res.status(200).json(`${userName} is removed as Student from ${batch} batch`);
               })
                await mainDB.doc(userName).update(batchalocate);
             }

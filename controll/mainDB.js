@@ -196,7 +196,6 @@ const readnotification = async(req, res)=> {
   if(data.exists){
     const userdata = data.data();
     const notification = userdata.notification;
-    const length = notification.length;
     res.status(200).json(notification);
   }else{
     res.status(400).json('Usernam not Found ');
